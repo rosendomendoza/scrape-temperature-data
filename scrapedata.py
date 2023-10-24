@@ -2,6 +2,7 @@ import time
 import requests
 import selectorlib
 from datetime import datetime
+import sqlite3
 
 URL = "https://programmer100.pythonanywhere.com/"
 
@@ -22,32 +23,45 @@ def store(date, temperature):
         to_store = f"{date},{temperature}\n"
         file.write(to_store)
 
-def scrapedata(amount_lectura=10, time_cicle=60):
+def storeDB(date, temperature):
+    connection = sqlite3.connect("data.db")
+    cursor = connection.cursor()
+
+    row = [(date, temperature)]
+    cursor.executemany("INSERT INTO temp_stamp VALUES(?,?)", row)
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+
+def scrapedata(amount_data=10, time_cycle=60):
+
     count = 0
     while True:
         scraped = scrape(URL)
         extracted = extract(scraped)
         now = datetime.now()
         timestamp = now.strftime("%y-%m-%d-%H-%M-%S")
-        store(timestamp, str(extracted))
+        storeDB(timestamp, str(extracted))
         count = count + 1
-        if count > amount_lectura:
+        if count > amount_data:
             break
         else:
-            time.sleep(time_cicle)
-
+            time.sleep(time_cycle)
 
 
 if __name__ == "__main__":
     count = 0
+
     while True:
         scraped = scrape(URL)
         extracted = extract(scraped)
         now = datetime.now()
         timestamp = now.strftime("%y-%m-%d-%H-%M-%S")
-        store(timestamp, str(extracted))
+        storeDB(timestamp, str(extracted))
         count = count + 1
         if count > 10:
             break
         else:
-            time.sleep(60)
+            time.sleep(5)
