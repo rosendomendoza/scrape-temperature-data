@@ -23,6 +23,16 @@ def store(date, temperature):
         to_store = f"{date},{temperature}\n"
         file.write(to_store)
 
+def initDB():
+    connection = sqlite3.connect("data.db")
+    cursor = connection.cursor()
+
+    cursor.execute("DELETE FROM temp_stamp")
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
 
 def storeDB(date, temperature):
     connection = sqlite3.connect("data.db")
@@ -35,7 +45,8 @@ def storeDB(date, temperature):
     connection.close()
 
 
-def scrapedata(amount_data=10, time_cycle=60):
+def scrapedata(amount_data=5, time_cycle=1):
+    initDB()
     count = 0
     while True:
         scraped = scrape(URL)
@@ -44,7 +55,7 @@ def scrapedata(amount_data=10, time_cycle=60):
         timestamp = now.strftime("%y-%m-%d-%H-%M-%S")
         storeDB(timestamp, extracted)
         count = count + 1
-        if count > amount_data:
+        if count >= amount_data:
             break
         else:
             time.sleep(time_cycle)
